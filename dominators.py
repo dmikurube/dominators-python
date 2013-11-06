@@ -84,6 +84,7 @@ def prepare_GD2(root, edges, parents, lca):
 
 def GD2(root, edges, parents, postorder, total, arcs):
   d = [ None ] * (len(parents) + 1)
+  d[root] = root
 
   out_node = [ None ] * (len(parents) + 1)
   in_node = [ None ] * (len(parents) + 1)
