@@ -1,10 +1,21 @@
 #!/usr/bin/env python
 
-# LCA (least common ancestors):
-# http://www.ics.uci.edu/~eppstein/PADS/LCA.py
-
+# This Python code computes a dominator tree for a given graph. It implements
+# the Algorithm GD, Version 2 in "Finding Dominators via Disjoint Set Union"
+# by Wojciech Fraczak, Loukas Georgiadis, Andrew Miller and Robert E. Tarjan.
+#
+# Note that it is a slow implementation because it uses naive Python lists
+# to represent sets "same", "out" and "in". It can be faster by replacing them
+# by singly-circular linked lists.
+#
+# It uses the following libraries for disjoint set union and least common
+# ancestors.
 # Union-find:
-# http://www.ics.uci.edu/~eppstein/PADS/UnionFind.py
+#   http://www.ics.uci.edu/~eppstein/PADS/UnionFind.py
+# LCA (least common ancestors):
+#   http://www.ics.uci.edu/~eppstein/PADS/LCA.py
+#
+# It assumes Python 2.7.
 
 
 import json
@@ -46,9 +57,19 @@ def verify_spanning_tree(root, edges, parents, postorder):
     is_root_reachable(node, root, edges, parents, reachable, working_stack)
   print "All nodes are reachable to the root."
 
+  new_edges = []
   edge_table = [ set() ] * (len(parents) + 1)
   for edge in edges:
+    if edge[0] == edge[1]:
+      # Skip self-looping edges.
+      continue
+    if edge[1] in edge_table[edge[0]]:
+      # Skip duplicated edges.
+      continue
     edge_table[edge[0]].add(edge[1])
+    new_edges.append((edge[0], edge[1]))
+  print "Removed all self-looping and duplicated edges."
+  edges = new_edges
   for node, parent in parents.iteritems():
     if node not in edge_table[parent]:
       raise "A tree edge (%d, %d) is not included in the original graph."
@@ -68,7 +89,7 @@ def verify_spanning_tree(root, edges, parents, postorder):
       raise "Not ordered in post-order."
   print "Ordered in post-order."
 
-  return True
+  return edges
 
 
 def prepare_GD2(root, edges, parents, lca):
@@ -120,7 +141,6 @@ def GD2(root, edges, parents, postorder, total, arcs):
             d[w] = u
         else:
           same[x].extend(same[v])
-        # To be in "else" above?
         unionfind.union(parents[v], v)
         out_node[x].extend(out_node[v])
 
@@ -166,7 +186,7 @@ def main(argv):
 
   root = roots[0]
 
-  verify_spanning_tree(root, edges, parents, postorder)
+  edges = verify_spanning_tree(root, edges, parents, postorder)
   lca = LCA(parents)
   print "Built LCA."
 
