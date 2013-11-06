@@ -1,7 +1,10 @@
-This Python code computes a dominator tree for a given graph. It implements
-the Algorithm GD, Version 2 in "Finding Dominators via Disjoint Set Union"
-by Wojciech Fraczak, Loukas Georgiadis, Andrew Miller and Robert E. Tarjan.
-See http://arxiv.org/abs/1310.2118 for the article.
+This Python code tries to compute dominators for a given graph. It (tries to)
+implement the Algorithm GD, Version 2 in "Finding Dominators via Disjoint Set
+Union" by Wojciech Fraczak, Loukas Georgiadis, Andrew Miller and Robert E.
+Tarjan. See http://arxiv.org/abs/1310.2118 for the article.
+
+Note that the implementation is not working for the attached data. Needs more
+work.
 
 * dominators.py:
     * The implementation. Run it with downloading UnionFInd.py and LCA.py described as below. It reads *.json files in the same directory.
