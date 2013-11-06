@@ -56,7 +56,7 @@ def verify_spanning_tree(root, edges, parents, postorder):
       print "Root: %d" % root
       continue
     is_root_reachable(node, root, edges, parents, reachable, working_stack)
-  print "All nodes are reachable to the root."
+  print "All nodes are reachable to the root in the spanning tree."
 
   new_edges = []
   edge_table = [ set() ] * (len(parents) + 1)
