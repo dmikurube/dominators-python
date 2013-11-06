@@ -59,7 +59,9 @@ def verify_spanning_tree(root, edges, parents, postorder):
   print "All nodes are reachable to the root in the spanning tree."
 
   new_edges = []
-  edge_table = [ set() ] * (len(parents) + 1)
+  edge_table = [ None ] * (len(parents) + 1)
+  for node in range(len(parents) + 1):  # Iterate all nodes.
+    edge_table[node] = set()
   for edge in edges:
     if edge[0] == edge[1]:
       # Skip self-looping edges.
