@@ -33,7 +33,7 @@
 	#define RFW_CLOCK
 #else 
 	#include <sys/time.h>
-	#ifdef __GLIBC__
+	#if defined(__GLIBC__) || defined(__APPLE__)
 		#define RFW_RUSAGE
 	#else 
 		#define RFW_HTIME

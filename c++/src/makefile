@@ -10,8 +10,8 @@ SOURCES = dom.cpp rfw_timer.cpp dgraph.cpp dgraph_iter.cpp dgraph_snca.cpp \
 #
 
 GCC_NAME    = g++
-GCC_FLAGS   = -Wall -O4
-GCC_LIBS    = -lm -L/usr/lib32/
+GCC_FLAGS   = -Wall -O3
+GCC_LIBS    = -lm -L/usr/lib/
 GCC_DEFINES = -DBOSSA_RUSAGE
 GCC_OBJECTS = $(SOURCES:.cpp=.o)
 GCC_COUNTOBJ= $(SOURCES:.cpp=.oc)
