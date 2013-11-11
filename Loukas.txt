@@ -1,0 +1,24 @@
+Hi,
+
+I cannot follow your code very well since I am not so familiar with
+Python (I code in C++ or Java), so I would suggest trying some small
+examples first, e.g. like the one in figure 8 of our paper, and see if
+all values are computed correctly. Perhaps there is something wrong in
+updating the total and added counters. Each vertex v has its dominator
+computed when all arcs into v are processed, in which case we should
+have total(v)=0.
+There are no other requirements except for removing self-loops and
+parallel arcs from the input graph (although it would be possible to
+extend the algorithm to handle these arcs, but removing them seems
+easier).
+
+We will start implementing these algorithms in C++ soon, so we can
+exchange notes on implementations later.
+
+By the way, in case I didn't mention it before, we have some
+implementations (in C++) of previous algorithms for computing
+dominators here:
+http://www.cs.princeton.edu/~rwerneck/dominators/
+
+I hope this can be useful to you.
+
