@@ -75,7 +75,9 @@ def verify_spanning_tree(root, edges, parents, postorder):
   edges = new_edges
   for node, parent in parents.iteritems():
     if node not in edge_table[parent]:
-      raise "A tree edge (%d, %d) is not included in the original graph."
+      raise BaseException(
+          "A tree edge (%d, %d) is not included in the original graph." % (
+              parent, node))
   print "All tree edges are included in the original graph."
 
   visited_count = 0
