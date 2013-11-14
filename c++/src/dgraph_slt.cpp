@@ -8,6 +8,60 @@
  | - vertex v not inserted in bucket if semi[v]==parent[v]
  *--------------------------------------------------------*/
 
+static int _readDFS(const char* parents_filename,
+                    const char* preorder_filename,
+                    int* parent,
+                    int* pre2label,
+                    int* label2pre) {
+  FILE *input = fopen (parents_filename, "r");
+  if (!input) {
+    fprintf (stderr, "Error opening file \"%s\".\n", parents_filename);
+    exit(-1);
+  }
+
+  int n, src;
+  if (fscanf(input,"parents %d %d\n", &n, &src) != 2) {
+    fprintf (stderr, "Error reading graph size (%s).\n", parents_filename);
+    exit (-1);
+  }
+  parent[src] = 0;
+
+  while (1) {
+    int node, p;
+    if (fscanf(input, "%d %d\n", &node, &p)!=2)
+      break; //arc from a to b
+    parent[node] = p;
+  }
+  fclose (input);
+
+  input = fopen (preorder_filename, "r");
+  if (!input) {
+    fprintf (stderr, "Error opening file \"%s\".\n", preorder_filename);
+    exit(-1);
+  }
+
+  int n2;
+  if (fscanf(input,"preorder %d %d\n", &n2, &src) != 2) {
+    fprintf (stderr, "Error reading graph size (%s).\n", preorder_filename);
+    exit (-1);
+  }
+  if (n != n2) {
+    fprintf (stderr, "#nodes differ.\n");
+    exit (-1);
+  }
+
+  while (1) {
+    int pre, ord;
+    if (fscanf(input, "%d %d\n", &pre, &ord)!=2)
+      break; //arc from a to b
+    pre2label[pre] = ord;
+    label2pre[ord] = pre;
+  }
+  fclose (input);
+
+  return n;
+}
+
 void DominatorGraph::slt (int r, int *idom) {
 	int bsize = n+1;
 	int *buffer    = new int [6*bsize];
@@ -29,7 +83,9 @@ void DominatorGraph::slt (int r, int *idom) {
 	}
 
 	//pre-dfs
-	int N = preDFSp (r, label2pre, pre2label, parent);
+	int N;
+        N = preDFSp (r, label2pre, pre2label, parent);
+        N = _readDFS("data.dimacs.parents", "data.dimacs.preorder", parent, pre2label, label2pre);
 
 	// process the vertices in reverse preorder 
 	for (i=N; i>1; i--) {

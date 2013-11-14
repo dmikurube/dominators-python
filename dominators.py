@@ -47,7 +47,7 @@ def is_root_reachable(node, root, edges, parents, reachable, stack):
   return True
 
 
-def verify_spanning_tree(root, edges, parents, postorder):
+def verify_spanning_tree(root, edges, parents, postorder, preorder):
   reachable = [ False ] * (len(parents) + 1)
   working_stack = [ -1 ] * (len(parents) + 1)
 
@@ -86,13 +86,27 @@ def verify_spanning_tree(root, edges, parents, postorder):
     node_ordinal = postorder[node_postorder]
     if node_ordinal == root:
       if visited_count != len(parents):
-        raise "Not ordered in post-order: root is not at last."
+        raise "[Post] Not ordered in a bottom-up order: root is not at last."
       break  # check count
     visited[node_ordinal] = True
     visited_count += 1
     if visited[parents[node_ordinal]]:
-      raise "Not ordered in post-order."
-  print "Ordered in post-order."
+      raise "[Post] Not ordered in a bottom-up order."
+  print "[Post] Ordered in a bottom-up order."
+
+  visited_count = 0
+  visited = [ False ] * (len(parents) + 1)
+  for node_preorder in reversed(range(len(parents) + 1)):  # Iterate all nodes.
+    node_ordinal = preorder[node_preorder]
+    if node_ordinal == root:
+      if visited_count != len(parents):
+        raise "[Pre] Not ordered in a bottom-up order: root is not at last."
+      break  # check count
+    visited[node_ordinal] = True
+    visited_count += 1
+    if visited[parents[node_ordinal]]:
+      raise "[Pre] Not ordered in a bottom-up order."
+  print "[Pre] Ordered in a bottom-up order."
 
   return edges
 
@@ -108,7 +122,7 @@ def prepare_GD2(root, edges, parents, lca):
   return total, arcs
 
 
-def GD2(root, edges, parents, postorder, total, arcs):
+def GD2(root, edges, parents, postorder, preorder, total, arcs):
   d = [ None ] * (len(parents) + 1)
   d[root] = root
 
@@ -120,6 +134,8 @@ def GD2(root, edges, parents, postorder, total, arcs):
 
   for node_postorder in range(len(parents) + 1):  # Iterate all nodes.
     u = postorder[node_postorder]
+    #for node_preorder in reversed(range(len(parents) + 1)):  # Iterate all nodes.
+    #  u = preorder[node_preorder]
     out_node[u] = []
     in_node[u] = []
     # unionfind.makeset(u)
@@ -132,13 +148,18 @@ def GD2(root, edges, parents, postorder, total, arcs):
       out_node[find_x].append(y)
       in_node[find_y].append(x)
       added[find_y] += 1
+    arcs[u] = []
 
-    while out_node[u]:
+    while len(out_node[u]) > 0:
       y = out_node[u].pop()
       v = unionfind[y]
       if v != u:
+        if total[v] < 0:
+          raise BaseException("hoge")
         total[v] -= 1
         added[v] -= 1
+      if total[v] < 0:
+        raise BaseException("moga")
       if total[v] == 0:
         x = unionfind[parents[v]]
         if u == x:
@@ -149,7 +170,7 @@ def GD2(root, edges, parents, postorder, total, arcs):
         unionfind.union(parents[v], v)
         out_node[x].extend(out_node[v])
 
-    while in_node[u]:
+    while len(in_node[u]) > 0:
       z = in_node[u].pop()
       v = unionfind[z]
       while v != u:
@@ -158,14 +179,97 @@ def GD2(root, edges, parents, postorder, total, arcs):
         unionfind.union(parents[v], v)
         in_node[x].extend(in_node[v])
         out_node[x].extend(out_node[v])
+        if total[v] < 0:
+          raise BaseException("hoga")
         total[x] += total[v]
+        total[v] = -10000
         added[x] += added[v]
         v = x
 
     total[u] -= added[u]
     added[u] = 0
 
+  all_total = 0
+  all_arcs = 0
+  all_in = 0
+  for t in total:
+    if t > 0:
+      all_total += t
+  for arc in arcs:
+    all_arcs += len(arc)
+  for ins in in_node:
+    if ins:
+      all_in += len(ins)
+  if all_total != all_arcs:
+    print '%d: %d - %d - %d' % (node_postorder, all_total, all_arcs, all_in)
+
   return d
+
+
+def rcompress(v, parents, label, c, ccount):
+  ccount += 1
+  p = parents[v]
+  if p > c:
+    ccount = rcompress(p, parents, label, c, ccount)
+    ccount += 1
+    if label[p] < label[v]:
+      label[v] = label[p];
+    parents[v] = parents[p];
+  return ccount
+
+
+def snca(root, edges, parents, preorder, rpreorder):
+  nvertices = len(parents) + 1
+  nedges = len(edges)
+  # initialize arrays
+  in_arcs = [ [] for i in range(nedges)]
+
+  # insert the arcs; in the process, last_in and last_out will end up being correct
+  for edge in reversed(edges):
+    in_arcs[edge[1]].append(edge[0])
+
+  bsize = len(parents) + 2
+  dom = [0] * bsize
+  label = [i for i in range(bsize)]
+  semi = [i for i in range(bsize)]
+
+  idom = [0] * bsize
+  icount = 0
+  scount = 0
+  ccount = 0
+
+  for i in reversed(range(len(parents) + 1)):  # Iterate all nodes.
+    if preorder[i] == root:
+      continue
+
+    dom[i] = parents[i];
+
+    for p in in_arcs[preorder[i]]:
+      v = rpreorder[p]
+      ccount += 1
+      if v <= i:  # v is an ancestor of i
+        u = v
+      else:
+        rcompress(v, parents, label, i, ccount)
+        u = label[v]
+      ccount += 1
+      if semi[u] < semi[i]:
+        semi[i] = semi[u]
+
+    label[i] = semi[i]
+
+  dom[0] = 0
+  idom[root] = root
+  for i in range(1, nvertices):
+    j = dom[i];
+    while j > semi[i]:
+      j = dom[j]
+      ccount += 1
+    ccount += 1
+    dom[i] = j;
+    idom[preorder[i]] = preorder[dom[i]];
+
+  return idom
 
 
 def main(argv):
@@ -176,6 +280,13 @@ def main(argv):
     postorder = {}
     for post, ordinal in raw_postorder.iteritems():
       postorder[int(post)] = ordinal
+  with open('preorder.json', 'r') as preorder_f:
+    raw_preorder = json.load(preorder_f, object_pairs_hook=OrderedDict)
+    preorder = {}
+    rpreorder = {}
+    for pre, ordinal in raw_preorder.iteritems():
+      preorder[int(pre)] = ordinal
+      rpreorder[ordinal] = int(pre)
   with open('parents.json', 'r') as parents_f:
     raw_parents = json.load(parents_f, object_pairs_hook=OrderedDict)
     roots = []
@@ -191,14 +302,15 @@ def main(argv):
 
   root = roots[0]
 
-  edges = verify_spanning_tree(root, edges, parents, postorder)
+  edges = verify_spanning_tree(root, edges, parents, postorder, preorder)
   lca = LCA(parents)
   print "Built LCA."
 
   total, arcs = prepare_GD2(root, edges, parents, lca)
   print "Prepared total and arcs."
 
-  dominators = GD2(root, edges, parents, postorder, total, arcs)
+  dominators = GD2(root, edges, parents, postorder, preorder, total, arcs)
+  # dominators = snca(root, edges, parents, preorder, rpreorder)
   for node in range(len(parents) + 1):  # Iterate all nodes.
     print '%d: %s' % (node, dominators[node])
 
